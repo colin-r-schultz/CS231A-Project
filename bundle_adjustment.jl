@@ -16,7 +16,7 @@ function bundle_adjustment(image_points, K)
         (X * R[i, :, :]' .+ T[i]') * K'
     )
     @NLexpression(model, X_projected[i = 1:M],
-        X_projected_homogenous[i, :, 1:2] ./ X_projected_homogenous[i, :, 3]
+        (X_projected_homogenous[i, :, 1:2]' ./ X_projected_homogenous[i, :, 3]')'
     )
 
     @objective(model, Min, sum((image_points - X_projected).^2))
