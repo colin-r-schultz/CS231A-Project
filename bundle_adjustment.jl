@@ -40,6 +40,7 @@ function bundle_adjustment(image_points, K)
     set_start_value.(P, rand(M, N, 3))
     set_start_value.(p, rand(M, N, 2))
     MOI.set(model, MOI.RawParameter("max_iter"), 10000)
+
     optimize!(model)
     return value.(R), value.(T), value.(X)
 end
