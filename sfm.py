@@ -3,8 +3,9 @@ import tensorflow as tf
 import tensorflow_graphics.geometry.transformation as tfg_transformation
 from synthetic import generate_synthetic_points
 import matplotlib.pyplot as plt
+from utils import *
 
-def multibody_sfm(points, K):
+def multibody_sfm(points,  K, iters=3000):
     """Compute 3D structure over multiple frames
 
     M = number of frames
@@ -12,15 +13,21 @@ def multibody_sfm(points, K):
 
     Inputs:
         points - M x N x 2 2d pixel positions of N points over M frames
+        segmentation - length N array of object ids [0-O]
         K - 3x3 intrinsics matrix
 
     Returns:
-        structure - M x N x 3  3d world positions of N points of M frames
+        structure - N x 3  3d world positions of rigid body
+        projections - M x N x 3 2d pixel projections of N moints over M frames
     """
+    max_norm = np.max(np.linalg.norm(points[:, 1] - points[:, 0], axis=-1))
+    z_guess = K[0, 0] / max_norm
+    print("########Z_GUESS", z_guess)
+
     M, N, _ = points.shape
     X_trainable = tf.Variable(np.zeros((N - 2, 3)), dtype=tf.float64)
     angle = tf.Variable(np.zeros((M, 3)), dtype=tf.float64)
-    T = tf.Variable(np.tile([0, 0, 5], (M, 1)), dtype=tf.float64)
+    T = tf.Variable(np.tile([0, 0, z_guess], (M, 1)), dtype=tf.float64)
 
     X12 = tf.constant([
         [0, 0, 0],
@@ -41,10 +48,14 @@ def multibody_sfm(points, K):
         return pixels
 
     @tf.function
+    def residuals():
+        return project() - points
+
+    @tf.function
     def loss():
-        res = project() - points
-        l = tf.reduce_mean(tf.reduce_sum(tf.square(res), axis=-1))
-        # l = tf.reduce_mean(tf.sqrt(tf.reduce_sum(tf.square(res), axis=-1)))
+        res = residuals()
+        # l = tf.reduce_mean(tf.reduce_sum(tf.square(res), axis=-1))
+        l = tf.reduce_mean(tf.sqrt(tf.reduce_sum(tf.square(res), axis=-1)))
         return l
 
     @tf.function
@@ -80,14 +91,20 @@ def multibody_sfm(points, K):
     # print("features!", features.shape)
     # np.save("features2objs0iters", features)
 
-    for i in range(10000):
-        l = loss()
-        print(i, l.numpy())
+    for i in range(iters):
+        if i % 1000 == 0:
+            l = loss()
+            print(i, l.numpy())
         opt.minimize(loss, var)
+
 
     # features = get_features()
     # print("features!", features.shape)
     # np.save("features2objs10000iters", features)
+
+    res = residuals().numpy()
+    print("loss")
+    print(np.mean(np.linalg.norm(res, axis=-1), axis=0))
 
     X = tf.concat([X12, X_trainable], axis=0)
 
@@ -101,8 +118,25 @@ if __name__ == "__main__":
         [0, 0, 1]
     ])
     pts, p = generate_synthetic_points(K, M)
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    ax.scatter(pts[0, :, 0], pts[0, :, 1], pts[0, :, 2])
+    ax.set_box_aspect([1,1,1])
+    set_axes_equal(ax)
+    plt.show()
+
     pts2, p2 = multibody_sfm(p, K)
     print(pts2)
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    ax.scatter(pts2[:, 0], pts2[:, 1], pts2[:, 2])
+    ax.set_box_aspect([1,1,1])
+    set_axes_equal(ax)
+    plt.show()
+
+
+    
     for i in range(M):
         plt.axis("equal")
         plt.xlim([0, 640])

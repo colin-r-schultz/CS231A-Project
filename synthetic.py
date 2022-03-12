@@ -13,11 +13,18 @@ def transform_shape(shape, M):
         points (M x N x 3)
     """
     R = Rotation.random(M).as_matrix()
-    T = 5 * (np.random.rand(M, 3) - 0.5) + [0, 0, 6]
+    T = 3 * (np.random.rand(M, 3) - 0.5) + [0, 0, 6]
     points = (R @ shape.T).transpose(0, 2, 1)
     points = points + T.reshape(-1, 1, 3)
 
     return points
+
+def make_cylinder(r, h, n):
+    theta = np.linspace(0, 2 * np.pi, n, endpoint=False)
+    xyz = np.array([r * np.cos(theta), r * np.sin(theta), np.full(n, -h/2)]).T
+    xyz_2 = xyz.copy()
+    xyz_2[:, 2] += h
+    return np.concatenate([xyz, xyz_2], axis=0)
 
 def generate_synthetic_points(K, M=4):
     """Generate synthetic points from 
@@ -35,8 +42,11 @@ def generate_synthetic_points(K, M=4):
     ])
 
     points = np.concatenate([
-        # transform_shape(cube, M) + [-2, 0, 0], 
-        transform_shape(tetra, M) + [2, 0, 0]
+        transform_shape(cube, M),
+        transform_shape(tetra, M),
+        transform_shape(tetra, M),
+        transform_shape(make_cylinder(1, 2, 12), M),
+        transform_shape(make_cylinder(1.5, 1, 7), M)
     ], axis=1)
 
     pixels = points @ K.T
@@ -54,6 +64,7 @@ if __name__ == "__main__":
     pts, p = generate_synthetic_points(K, M)
     np.savetxt("3d_points.txt", pts.ravel('F'))
     np.savetxt("pixels.txt", p.ravel('F'))
+
     for i in range(M):
         plt.axis("equal")
         plt.xlim([0, 640])
