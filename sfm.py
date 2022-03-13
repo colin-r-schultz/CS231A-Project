@@ -22,7 +22,7 @@ def multibody_sfm(points,  K, iters=3000):
     """
     max_norm = np.max(np.linalg.norm(points[:, 1] - points[:, 0], axis=-1))
     z_guess = K[0, 0] / max_norm
-    print("########Z_GUESS", z_guess)
+    # print("########Z_GUESS", z_guess)
 
     M, N, _ = points.shape
     X = tf.Variable(np.zeros((N, 3)), dtype=tf.float64)
@@ -73,8 +73,8 @@ def multibody_sfm(points,  K, iters=3000):
     # np.save("features2objs10000iters", features)
 
     res = residuals().numpy()
-    print("loss")
-    print(np.mean(np.linalg.norm(res, axis=-1), axis=0))
+    # print("loss")
+    # print(np.mean(np.linalg.norm(res, axis=-1), axis=0))
 
     return X.numpy(), project().numpy(), res
 
@@ -93,8 +93,24 @@ if __name__ == "__main__":
     set_axes_equal(ax)
     plt.show()
 
-    pts2, p2, _ = multibody_sfm(p, K, iters=10000)
+    pts2, p2, res = multibody_sfm(p, K, iters=10000)
     print(pts2)
+
+    print("loss")
+    pt_loss = np.mean(np.linalg.norm(res, axis=-1), axis=0)
+    print(pt_loss[:8])
+    print(np.mean(pt_loss[:8]))
+    print(pt_loss[8:32])
+    print(np.mean(pt_loss[8:32]))
+    print(pt_loss[32:46])
+    print(np.mean(pt_loss[32:46]))
+
+    objs_gt = np.zeros(p.shape[1], int)
+    objs_gt[8:32] = 1
+    objs_gt[32:] = 2
+
+    plt.scatter(objs_gt, pt_loss)
+    plt.show()
 
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')

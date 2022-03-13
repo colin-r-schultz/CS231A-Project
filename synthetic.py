@@ -43,8 +43,8 @@ def generate_synthetic_points(K, M=4):
 
     points = np.concatenate([
         transform_shape(cube, M),
-        transform_shape(tetra, M),
-        transform_shape(tetra, M),
+        # transform_shape(tetra, M),
+        # transform_shape(tetra, M),
         transform_shape(make_cylinder(1, 2, 12), M),
         transform_shape(make_cylinder(1.5, 1, 7), M)
     ], axis=1)

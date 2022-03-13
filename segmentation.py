@@ -24,6 +24,12 @@ def segment(points, K):
     def is_one_object(pts, res):
         return np.mean(np.linalg.norm(res, axis=-1)) < 2.0
 
+    def split(pts, res):
+        km = KMeans(n_clusters=2)
+        s = km.fit_predict(pts)
+        return s
+
+
     M, N, _ = points.shape
     segmentation = np.zeros(N, int)
 
@@ -44,8 +50,8 @@ def segment(points, K):
                 new_segmentation[obj_pts] = num_objects
                 num_objects += 1
             else:
-                km = KMeans(n_clusters=2)
-                new_segmentation[obj_pts] = km.fit_predict(pts) + num_objects
+                new_segmentation[obj_pts] = split(pts, res) + num_objects
+                print("Split ", o, " into ", num_objects, " and ", num_objects+1)
                 num_objects += 2
 
         segmentation = new_segmentation
@@ -61,11 +67,14 @@ def segment(points, K):
             merged = False
             for o2 in objects:
                 combined_pts = (segmentation == o1) + (segmentation == o2)
+                if np.count_nonzero(combined_pts) < 4:
+                    continue
                 pts, _, res = multibody_sfm(points[:, combined_pts], K)
                 if is_one_object(pts, res):
                     objects.remove(o2)
                     new_segmentation[combined_pts] = num_objects
                     merged = True
+                    print("Merging ", o1, " and ", o2, " into ", num_objects)
                     break
             if not merged:
                 new_segmentation[segmentation == o1] = num_objects
@@ -94,9 +103,11 @@ if __name__ == "__main__":
     S = segment(p, K)
     print()
     print(S[:8])
-    print(S[8:12])
-    print(S[12:16])
-    print(S[16:40])
-    print(S[40:54])
+    # print(S[8:12])
+    # print(S[12:16])
+    # print(S[16:40])
+    # print(S[40:54])
+    print(S[8:32])
+    print(S[32:46])
 
 
