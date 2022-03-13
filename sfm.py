@@ -108,7 +108,7 @@ def multibody_sfm(points,  K, iters=3000):
 
     X = tf.concat([X12, X_trainable], axis=0)
 
-    return X.numpy(), project().numpy()
+    return X.numpy(), project().numpy(), res
 
 if __name__ == "__main__":
     M = 16

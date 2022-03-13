@@ -1,3 +1,4 @@
+from re import I
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans
@@ -19,20 +20,59 @@ def segment(points, K):
     Returns:
         segmentation - N object ids
     """
+
+    def is_one_object(pts, res):
+        return np.mean(np.linalg.norm(res, axis=-1)) < 2.0
+
     M, N, _ = points.shape
     segmentation = np.zeros(N, int)
-    pts, _ = multibody_sfm(points[:, segmentation == 0], K)
-    km = KMeans(n_clusters=5)
-    segmentation = km.fit_predict(pts)
-    print(segmentation)
 
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-    ax.scatter(pts[:, 0], pts[:, 1], pts[:, 2])
-    ax.scatter(km.cluster_centers_[:, 0], km.cluster_centers_[:, 1], km.cluster_centers_[:, 2])
-    ax.set_box_aspect([1,1,1])
-    set_axes_equal(ax)
-    plt.show()
+    iters = 4
+    for i in range(iters):
+        new_segmentation = np.zeros_like(segmentation)
+        num_objects = 0
+
+        # SPLIT
+        for o in range(np.max(segmentation)+1):
+            obj_pts = (segmentation == o)
+            if np.count_nonzero(obj_pts) <= 4:
+                new_segmentation[obj_pts] = num_objects
+                num_objects += 1
+                continue
+            pts, _, res = multibody_sfm(points[:, obj_pts], K)
+            if is_one_object(pts, res):
+                new_segmentation[obj_pts] = num_objects
+                num_objects += 1
+            else:
+                km = KMeans(n_clusters=2)
+                new_segmentation[obj_pts] = km.fit_predict(pts) + num_objects
+                num_objects += 2
+
+        segmentation = new_segmentation
+        print("Split: ", segmentation)
+
+        new_segmentation = np.zeros_like(segmentation)
+        objects = [o for o in range(num_objects + 1)]
+        num_objects = 0
+
+        # MERGE
+        while len(objects) > 0:
+            o1 = objects.pop(0)
+            merged = False
+            for o2 in objects:
+                combined_pts = (segmentation == o1) + (segmentation == o2)
+                pts, _, res = multibody_sfm(points[:, combined_pts], K)
+                if is_one_object(pts, res):
+                    objects.remove(o2)
+                    new_segmentation[combined_pts] = num_objects
+                    merged = True
+                    break
+            if not merged:
+                new_segmentation[segmentation == o1] = num_objects
+            num_objects += 1
+
+        segmentation = new_segmentation
+        print("Merge: ", segmentation)
 
     return segmentation
 
@@ -51,5 +91,12 @@ if __name__ == "__main__":
     set_axes_equal(ax)
     plt.show()
 
-    print(segment(p, K))
+    S = segment(p, K)
+    print()
+    print(S[:8])
+    print(S[8:12])
+    print(S[12:16])
+    print(S[16:40])
+    print(S[40:54])
+
 
