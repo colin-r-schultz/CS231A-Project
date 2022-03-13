@@ -21,13 +21,12 @@ def transform_shape(shape, R, T):
 
     Args:
         shape (N x 3): 3d points of shape
-        R: set of M scipy Rotation objects
+        R: (M x 3 x 3) rotation matrices
         T: (M x 3) translations
 
     Returns:
         points (M x N x 3)
     """
-    R = R.as_matrix()
     points = (R @ shape.T).transpose(0, 2, 1)
     points = points + T.reshape(-1, 1, 3)
     return points
