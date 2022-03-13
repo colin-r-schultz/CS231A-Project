@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans
 
 from sfm import multibody_sfm
-from synthetic import generate_synthetic_points
+from synthetic import default_synthetic_points
 from utils import set_axes_equal
 
 def segment(points, K):
@@ -92,7 +92,7 @@ if __name__ == "__main__":
         [0, 320, 240],
         [0, 0, 1]
     ])
-    pts, p = generate_synthetic_points(K, M)
+    pts, p = default_synthetic_points(K, M)
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     ax.scatter(pts[0, :, 0], pts[0, :, 1], pts[0, :, 2])

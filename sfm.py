@@ -79,7 +79,7 @@ def multibody_sfm(points,  K, iters=3000):
     return X.numpy(), project().numpy(), res
 
 if __name__ == "__main__":
-    M = 16
+    M = 64
     K = np.array([
         [320, 0, 320],
         [0, 320, 240],
