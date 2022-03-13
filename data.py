@@ -56,4 +56,4 @@ if __name__ == "__main__":
         make_tetra(),
         make_tetra(1.5),
     ]
-    save_dataset(objs, M, "test_data")
+    save_dataset(objs, M, "test_data/8obj_8frame_1")
