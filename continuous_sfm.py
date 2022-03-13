@@ -1,4 +1,5 @@
 import numpy as np
+from collections import Counter
 import tensorflow as tf
 import tensorflow_graphics.geometry.transformation as tfg_transformation
 from data import load_dataset
@@ -89,14 +90,20 @@ if __name__ == "__main__":
     ])
     p, ids = load_dataset("test_data.npz", K)
 
-    pts2, p2, prob = multibody_sfm(p, K, 8, iters=3000)
+    pts2, p2, prob = multibody_sfm(p, K, 8, iters=10000)
     print(prob)
 
     classes = np.argmax(prob, axis=-1)
     print("CLASSES", classes)
     print(ids)
 
-    p2 = p2[:, :, classes, :]
+    c = Counter(zip(ids, classes))
+    s = [100*c[(xx,yy)] for xx,yy in zip(ids,classes)]
+    plt.scatter(ids, classes, s=s)
+    plt.show()
+
+    p2 = np.take_along_axis(p2, classes[np.newaxis, ..., np.newaxis, np.newaxis], axis=2)
+    p2 = np.squeeze(p2)
 
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
