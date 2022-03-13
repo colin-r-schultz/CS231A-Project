@@ -7,7 +7,7 @@ from synthetic import generate_synthetic_points
 import matplotlib.pyplot as plt
 from utils import *
 
-def multibody_sfm(points, K, O, iters=3000):
+def multibody_sfm(points, K, O, iters=3000, init_p=None):
     """Compute 3D structure over multiple frames
 
     M = number of frames
@@ -25,17 +25,19 @@ def multibody_sfm(points, K, O, iters=3000):
     """
     M, N, _ = points.shape
     X = tf.Variable(np.random.randn(N, 3) * 0.1, dtype=tf.float64)
-    P = tf.Variable(np.zeros((N, O)), dtype=tf.float64)
-    angle = tf.Variable(np.zeros((M, O, 3)), dtype=tf.float64)
-    T = tf.Variable(np.random.randn(M, O, 3) * 0.1 + [0, 0, 1.], dtype=tf.float64)
+    if init_p is None:
+        init_p = np.random.randn(N, O) * 0.01
+    P = tf.Variable(init_p, dtype=tf.float64)
+    quat = tf.Variable(np.tile([0, 0, 0, 1], (M, O, 1)), dtype=tf.float64)
+    T = tf.Variable(np.tile([0, 0, 1], (M, O, 1)), dtype=tf.float64)
 
     K = tf.constant(K, dtype=tf.float64)
     points = tf.constant(points, dtype=tf.float64)
 
     @tf.function
     def project():
-        R = tfg_transformation.rotation_matrix_3d.from_euler(angle)
-        X_ = tfg_transformation.rotation_matrix_3d.rotate(tf.reshape(X, (1, N, 1, 3)), tf.reshape(R, (M, 1, O, 3, 3)))
+        R = tfg_transformation.quaternion.normalize(quat)
+        X_ = tfg_transformation.quaternion.rotate(tf.reshape(X, (1, N, 1, 3)), tf.reshape(R, (M, 1, O, 4)))
         X_ += tf.reshape(T, (M, 1, O, 3))
         pixels = X_ @ tf.transpose(K)
         pixels = pixels[..., :2] / pixels[..., 2:]
@@ -57,7 +59,7 @@ def multibody_sfm(points, K, O, iters=3000):
         loss = res_loss + 0.01 * centroid_loss
         return loss
 
-    var = [X, P, angle, T]
+    var = [X, P, T, quat]
     opt = tf.keras.optimizers.Adam(0.01)
 
     # features = get_features()
@@ -88,9 +90,13 @@ if __name__ == "__main__":
         [0, 320, 240],
         [0, 0, 1]
     ])
-    p, ids = load_dataset("test_data.npz", K)
+    p, ids = load_dataset("test_data_2obj.npz", K)
+    O = np.max(ids) + 1
 
-    pts2, p2, prob = multibody_sfm(p, K, 8, iters=10000)
+    init_p = np.random.randn(p.shape[1], O) * 0.01
+    # init_p[(range(p.shape[1]), ids)] = 10
+
+    pts2, p2, prob = multibody_sfm(p, K, O, iters=5000, init_p=init_p)
     print(prob)
 
     classes = np.argmax(prob, axis=-1)
