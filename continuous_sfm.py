@@ -88,10 +88,10 @@ if __name__ == "__main__":
         [0, 320, 240],
         [0, 0, 1]
     ])
-    p, ids = load_dataset("test_data.npz", K)
+    p, ids = load_dataset("2cylinders_64frames.npz", K)
 
-    pts2, p2, prob = multibody_sfm(p, K, 8, iters=10000)
-    print(prob)
+    pts2, p2, prob = multibody_sfm(p, K, 2, iters=10000)
+    print(np.round(prob, 2))
 
     classes = np.argmax(prob, axis=-1)
     print("CLASSES", classes)

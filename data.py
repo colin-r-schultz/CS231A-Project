@@ -47,13 +47,13 @@ def load_dataset(fname, K):
 if __name__ == "__main__":
     M = 64
     objs = [
-        make_cube(),
-        make_cube(0.5),
-        make_cube(1.5),
+        # make_cube(),
+        # make_cube(0.5),
+        # make_cube(1.5),
         make_cylinder(1, 2, 6),
         make_cylinder(1.5, 1, 7),
-        make_tetra(0.7),
-        make_tetra(),
-        make_tetra(1.5),
+        # make_tetra(0.7),
+        # make_tetra(),
+        # make_tetra(1.5),
     ]
-    save_dataset(objs, M, "test_data")
+    save_dataset(objs, M, "2cylinders_64frames")
