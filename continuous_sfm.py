@@ -88,7 +88,8 @@ if __name__ == "__main__":
         [0, 320, 240],
         [0, 0, 1]
     ])
-    p, ids = load_dataset("2cylinders_64frames.npz", K)
+    M = 8
+    p, ids = load_dataset("datasets/2tetras_balanced.npz", K, num_frames=M)
 
     pts2, p2, prob = multibody_sfm(p, K, 2, iters=10000)
     print(np.round(prob, 2))
@@ -114,7 +115,7 @@ if __name__ == "__main__":
 
 
     
-    for i in range(8):
+    for i in range(M):
         plt.axis("equal")
         plt.xlim([0, 640])
         plt.ylim([0, 480])

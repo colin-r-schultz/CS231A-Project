@@ -25,12 +25,12 @@ def save_dataset(objs, M, fname):
     Ts = np.stack(Ts, axis=0)
     np.savez(fname, points=points, ids=ids, lines=lines, Rs=Rs, Ts=Ts)
 
-def load_dataset(fname, K):
+def load_dataset(fname, K, num_frames=None):
     data = np.load(fname)
     points = data["points"]
     ids = data["ids"]
-    Rs = data["Rs"]
-    Ts = data["Ts"]
+    Rs = data["Rs"][:num_frames]
+    Ts = data["Ts"][:num_frames]
 
     objs = []
 
