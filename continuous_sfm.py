@@ -90,13 +90,13 @@ if __name__ == "__main__":
         [0, 320, 240],
         [0, 0, 1]
     ])
-    M = 8
-    p, ids = load_dataset("datasets/2tetras_balanced.npz", K, num_frames=M)
+    M = 128
+    p, ids = load_dataset("datasets/2tetras_cubes_mixed.npz", K, num_frames=M)
     O = np.max(ids) + 1
 
     init_p = np.random.randn(p.shape[1], O) * 0.01
 
-    pts2, p2, prob = multibody_sfm(p, K, 2, iters=10000, init_p=init_p)
+    pts2, p2, prob = multibody_sfm(p, K, O, iters=10000, init_p=init_p)
     print(np.round(prob, 2))
 
     classes = np.argmax(prob, axis=-1)
@@ -111,14 +111,14 @@ if __name__ == "__main__":
     p2 = np.take_along_axis(p2, classes[np.newaxis, ..., np.newaxis, np.newaxis], axis=2)
     p2 = np.squeeze(p2)
 
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-    ax.scatter(pts2[:, 0], pts2[:, 1], pts2[:, 2])
-    ax.set_box_aspect([1,1,1])
-    set_axes_equal(ax)
-    plt.show()
-
-
+    for o in range(O):
+        obj_pts = (classes == o)
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+        ax.scatter(pts2[obj_pts, 0], pts2[obj_pts, 1], pts2[obj_pts, 2])
+        ax.set_box_aspect([1,1,1])
+        set_axes_equal(ax)
+        plt.show()
     
     for i in range(M):
         plt.axis("equal")

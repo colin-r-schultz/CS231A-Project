@@ -16,7 +16,8 @@ if __name__ == "__main__":
     #     make_tetra(1.5),
     # ]
 
-    for i in range(1, 9):
-        objs = [make_cylinder(0.5, 1.0, 8)] * i
-        filename = str(i) + "cylinders_balanced"
+    for i in range(1, 4):
+        # make_cylinder(0.5, 1.0, 8)
+        objs = [make_tetra(), make_cube(), make_cylinder(0.5, 1.0, 8)] * i
+        filename = str(3*i) + "tetras_cubes_cylinders_mixed"
         save_dataset(objs, M, "datasets/" + filename)
