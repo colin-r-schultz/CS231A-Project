@@ -45,7 +45,7 @@ def load_dataset(fname, K):
     return pixels, ids
 
 if __name__ == "__main__":
-    M = 8
+    M = 64
     objs = [
         make_cube(),
         make_cube(0.5),
