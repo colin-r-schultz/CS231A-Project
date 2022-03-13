@@ -3,7 +3,7 @@ from collections import Counter
 import tensorflow as tf
 import tensorflow_graphics.geometry.transformation as tfg_transformation
 from data import load_dataset
-from synthetic import generate_synthetic_points
+from sklearn.metrics import v_measure_score
 import matplotlib.pyplot as plt
 from utils import *
 
@@ -20,8 +20,9 @@ def multibody_sfm(points, K, O, iters=3000, init_p=None):
         O - number of objects
 
     Returns:
-        structure - N x 3  3d world positions of rigid body
+        structure - N x 3  3d world positions of points in their own rigid body
         projections - M x N x 3 2d pixel projections of N moints over M frames
+        probs - N x O probability of object membership for each of N points
     """
     M, N, _ = points.shape
     X = tf.Variable(np.random.randn(N, 3) * 0.1, dtype=tf.float64)
@@ -90,18 +91,18 @@ if __name__ == "__main__":
         [0, 320, 240],
         [0, 0, 1]
     ])
-    M = 8
-    p, ids = load_dataset("datasets/2tetras_balanced.npz", K, num_frames=M)
-    O = np.max(ids) + 1
+    M = 64
+    p, ids = load_dataset("datasets/2cylinders_balanced.npz", K, num_frames=M)
+    O = 4 #np.max(ids) + 1
 
     init_p = np.random.randn(p.shape[1], O) * 0.01
 
-    pts2, p2, prob = multibody_sfm(p, K, 2, iters=10000, init_p=init_p)
+    pts2, p2, prob = multibody_sfm(p, K, O, iters=3000, init_p=init_p)
     print(np.round(prob, 2))
 
     classes = np.argmax(prob, axis=-1)
     print("CLASSES", classes)
-    print(ids)
+    print("V_MEASUERE", v_measure_score(ids, classes))
 
     c = Counter(zip(ids, classes))
     s = [100*c[(xx,yy)] for xx,yy in zip(ids,classes)]
@@ -110,17 +111,19 @@ if __name__ == "__main__":
 
     p2 = np.take_along_axis(p2, classes[np.newaxis, ..., np.newaxis, np.newaxis], axis=2)
     p2 = np.squeeze(p2)
-
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-    ax.scatter(pts2[:, 0], pts2[:, 1], pts2[:, 2])
-    ax.set_box_aspect([1,1,1])
-    set_axes_equal(ax)
-    plt.show()
+    
+    for o in range(O):
+        obj_pts = (classes == o)
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+        ax.scatter(pts2[obj_pts, 0], pts2[obj_pts, 1], pts2[obj_pts, 2])
+        ax.set_box_aspect([1,1,1])
+        set_axes_equal(ax)
+        plt.show()
 
 
     
-    for i in range(M):
+    for i in range(8):
         plt.axis("equal")
         plt.xlim([0, 640])
         plt.ylim([0, 480])

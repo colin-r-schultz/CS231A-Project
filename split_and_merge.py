@@ -1,13 +1,9 @@
-from re import I
 import numpy as np
-import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans
 
-from sfm import multibody_sfm
-from synthetic import default_synthetic_points
-from utils import set_axes_equal
+from sfm import singlebody_sfm
 
-def segment(points, K):
+def split_and_merge(points, K):
     """Compute object segmentations
 
     M = number of frames
@@ -45,7 +41,7 @@ def segment(points, K):
                 new_segmentation[obj_pts] = num_objects
                 num_objects += 1
                 continue
-            pts, _, res = multibody_sfm(points[:, obj_pts], K)
+            pts, _, res = singlebody_sfm(points[:, obj_pts], K)
             if is_one_object(pts, res):
                 new_segmentation[obj_pts] = num_objects
                 num_objects += 1
@@ -69,7 +65,7 @@ def segment(points, K):
                 combined_pts = (segmentation == o1) + (segmentation == o2)
                 if np.count_nonzero(combined_pts) < 4:
                     continue
-                pts, _, res = multibody_sfm(points[:, combined_pts], K)
+                pts, _, res = singlebody_sfm(points[:, combined_pts], K)
                 if is_one_object(pts, res):
                     objects.remove(o2)
                     new_segmentation[combined_pts] = num_objects
@@ -86,6 +82,10 @@ def segment(points, K):
     return segmentation
 
 if __name__ == "__main__":
+    import matplotlib.pyplot as plt
+    from synthetic import default_synthetic_points
+    from utils import set_axes_equal
+
     M = 16
     K = np.array([
         [320, 0, 320],
@@ -100,7 +100,7 @@ if __name__ == "__main__":
     set_axes_equal(ax)
     plt.show()
 
-    S = segment(p, K)
+    S = split_and_merge(p, K)
     print()
     print(S[:8])
     # print(S[8:12])

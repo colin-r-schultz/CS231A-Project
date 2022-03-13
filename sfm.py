@@ -5,7 +5,7 @@ from synthetic import generate_synthetic_points
 import matplotlib.pyplot as plt
 from utils import *
 
-def multibody_sfm(points,  K, iters=3000):
+def singlebody_sfm(points,  K, iters=3000):
     """Compute 3D structure over multiple frames
 
     M = number of frames
@@ -93,7 +93,7 @@ if __name__ == "__main__":
     set_axes_equal(ax)
     plt.show()
 
-    pts2, p2, res = multibody_sfm(p, K, iters=10000)
+    pts2, p2, res = singlebody_sfm(p, K, iters=10000)
     print(pts2)
 
     print("loss")
