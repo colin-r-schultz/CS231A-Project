@@ -25,24 +25,19 @@ def multibody_sfm(points,  K, iters=3000):
     print("########Z_GUESS", z_guess)
 
     M, N, _ = points.shape
-    X_trainable = tf.Variable(np.zeros((N - 2, 3)), dtype=tf.float64)
+    X = tf.Variable(np.zeros((N, 3)), dtype=tf.float64)
     angle = tf.Variable(np.zeros((M, 3)), dtype=tf.float64)
     T = tf.Variable(np.tile([0, 0, z_guess], (M, 1)), dtype=tf.float64)
 
-    X12 = tf.constant([
-        [0, 0, 0],
-        [0, 0, 1]
-    ], tf.float64)
     K = tf.constant(K, dtype=tf.float64)
     points = tf.constant(points, dtype=tf.float64)
 
     @tf.function
     def project():
-        X = tf.concat([X12, X_trainable], axis=0)
         R = tfg_transformation.rotation_matrix_3d.from_euler(angle)
-        X = tfg_transformation.rotation_matrix_3d.rotate(tf.reshape(X, (1, N, 3)), tf.reshape(R, (M, 1, 3, 3)))
-        X += tf.reshape(T, (M, 1, 3))
-        pixels = X @ tf.transpose(K)
+        X_ = tfg_transformation.rotation_matrix_3d.rotate(tf.reshape(X, (1, N, 3)), tf.reshape(R, (M, 1, 3, 3)))
+        X_ += tf.reshape(T, (M, 1, 3))
+        pixels = X_ @ tf.transpose(K)
         pixels = pixels[:, :, :2] / pixels[:, :, 2:]
 
         return pixels
@@ -54,37 +49,12 @@ def multibody_sfm(points,  K, iters=3000):
     @tf.function
     def loss():
         res = residuals()
-        # l = tf.reduce_mean(tf.reduce_sum(tf.square(res), axis=-1))
-        l = tf.reduce_mean(tf.sqrt(tf.reduce_sum(tf.square(res), axis=-1)))
-        return l
+        res_loss = tf.reduce_mean(tf.norm(res, axis=-1))
+        centroid_loss = tf.reduce_sum(tf.square(tf.reduce_mean(X, axis=0)))
+        loss = res_loss + 0.01 * centroid_loss
+        return loss
 
-    @tf.function
-    def get_features():
-        with tf.GradientTape(persistent=True) as g:
-            X = tf.concat([X12, X_trainable], axis=0)
-            angles = tf.tile(tf.reshape(angle, (M, 1, 3)), (1, N, 1))
-            g.watch(angles)
-            R = tfg_transformation.rotation_matrix_3d.from_euler(angles)
-            X = tfg_transformation.rotation_matrix_3d.rotate(tf.reshape(X, (1, N, 3)), R)
-
-            Ts = tf.tile(tf.reshape(T, (M, 1, 3)), (1, N, 1))
-            g.watch(Ts)
-            X += Ts
-            pixels = X @ tf.transpose(K)
-            pixels = pixels[:, :, :2] / pixels[:, :, 2:]
-
-            res = pixels - points
-            l = tf.reduce_mean(tf.reduce_sum(tf.square(res), axis=-1))
-
-            dl_dR = g.gradient(l, angles)
-            dl_dT = g.gradient(l, Ts)
-
-            features = tf.concat([dl_dT, dl_dR], axis=-1)
-            features = tf.transpose(features, (1, 0, 2))
-            features = tf.reshape(features, (N, M * 6))
-            return features
-    
-    var = [X_trainable, angle, T]
+    var = [X, angle, T]
     opt = tf.keras.optimizers.Adam(0.01)
 
     # features = get_features()
@@ -106,8 +76,6 @@ def multibody_sfm(points,  K, iters=3000):
     print("loss")
     print(np.mean(np.linalg.norm(res, axis=-1), axis=0))
 
-    X = tf.concat([X12, X_trainable], axis=0)
-
     return X.numpy(), project().numpy(), res
 
 if __name__ == "__main__":
@@ -125,7 +93,7 @@ if __name__ == "__main__":
     set_axes_equal(ax)
     plt.show()
 
-    pts2, p2 = multibody_sfm(p, K)
+    pts2, p2, _ = multibody_sfm(p, K, iters=10000)
     print(pts2)
 
     fig = plt.figure()

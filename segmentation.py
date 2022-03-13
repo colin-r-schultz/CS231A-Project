@@ -52,7 +52,7 @@ def segment(points, K):
         print("Split: ", segmentation)
 
         new_segmentation = np.zeros_like(segmentation)
-        objects = [o for o in range(num_objects + 1)]
+        objects = list(range(num_objects))
         num_objects = 0
 
         # MERGE
