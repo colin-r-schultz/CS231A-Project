@@ -1,11 +1,6 @@
 import numpy as np
-from collections import Counter
 import tensorflow as tf
 import tensorflow_graphics.geometry.transformation as tfg_transformation
-from data import load_dataset
-from synthetic import generate_synthetic_points
-import matplotlib.pyplot as plt
-from utils import *
 
 def multibody_sfm(points, K, O, iters=3000, init_p=None):
     """Compute 3D structure over multiple frames
@@ -85,6 +80,13 @@ def multibody_sfm(points, K, O, iters=3000, init_p=None):
     return X.numpy(), project().numpy(), P_.numpy()
 
 if __name__ == "__main__":
+
+    from data import load_dataset
+    from synthetic import generate_synthetic_points
+    import matplotlib.pyplot as plt
+    from utils import *
+    from collections import Counter
+
     K = np.array([
         [320, 0, 320],
         [0, 320, 240],
