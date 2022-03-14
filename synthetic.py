@@ -60,7 +60,7 @@ def make_cylinder(r, h, n):
     return points, lines
 
 def make_cube(r=1):
-    return make_cylinder(r * np.sqrt(2), r * 2, 4)
+    return make_cylinder(r / np.sqrt(2), r, 4)
 
 def make_tetra(r=1):
     tetra = np.array([

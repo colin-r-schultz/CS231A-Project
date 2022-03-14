@@ -1,11 +1,6 @@
 import numpy as np
-from collections import Counter
 import tensorflow as tf
 import tensorflow_graphics.geometry.transformation as tfg_transformation
-from data import load_dataset
-from sklearn.metrics import v_measure_score
-import matplotlib.pyplot as plt
-from utils import *
 
 def multibody_sfm(points, K, O, iters=3000, verbose=False):
     """Compute 3D structure over multiple frames
@@ -76,18 +71,23 @@ def multibody_sfm(points, K, O, iters=3000, verbose=False):
     return X.numpy(), project().numpy(), P_.numpy()
 
 if __name__ == "__main__":
+
+    from data import load_dataset
+    from synthetic import generate_synthetic_points
+    import matplotlib.pyplot as plt
+    from utils import *
+    from collections import Counter
+
     K = np.array([
         [320, 0, 320],
         [0, 320, 240],
         [0, 0, 1]
     ])
-    M = 64
-    p, ids = load_dataset("datasets/2cylinders_balanced.npz", K, num_frames=M)
-    O = 4 #np.max(ids) + 1
+    M = 128
+    p, ids = load_dataset("datasets/2tetras_cubes_mixed.npz", K, num_frames=M)
+    O = np.max(ids) + 1
 
-    init_p = np.random.randn(p.shape[1], O) * 0.01
-
-    pts2, p2, prob = multibody_sfm(p, K, O, iters=3000, init_p=init_p)
+    pts2, p2, prob = multibody_sfm(p, K, O, iters=10000)
     print(np.round(prob, 2))
 
     classes = np.argmax(prob, axis=-1)
@@ -102,6 +102,7 @@ if __name__ == "__main__":
     p2 = np.take_along_axis(p2, classes[np.newaxis, ..., np.newaxis, np.newaxis], axis=2)
     p2 = np.squeeze(p2)
     
+
     for o in range(O):
         obj_pts = (classes == o)
         fig = plt.figure()
@@ -110,8 +111,6 @@ if __name__ == "__main__":
         ax.set_box_aspect([1,1,1])
         set_axes_equal(ax)
         plt.show()
-
-
     
     for i in range(8):
         plt.axis("equal")
