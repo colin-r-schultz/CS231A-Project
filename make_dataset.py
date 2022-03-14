@@ -12,11 +12,11 @@ def make_random_dataset(M, file_num, O=None):
     for o in range(O):
         s = random.choice(shapes)
         if s == "tetra":
-            objs.append(make_tetra(np.random.rand() + 0.5))
+            objs.append(make_tetra(1.5*np.random.rand() + 0.5))
         elif s == "cube":
-            objs.append(make_cube(np.random.rand() + 0.5))
+            objs.append(make_cube(1.5*np.random.rand() + 0.5))
         else:
-            objs.append(make_cylinder(0.5*np.random.rand() + 0.25, np.random.rand() + 0.5, np.random.randint(3, 13)))
+            objs.append(make_cylinder(0.75*np.random.rand() + 0.25, 1.5*np.random.rand() + 0.5, np.random.randint(3, 13)))
     
     save_dataset(objs, M, "datasets/" + str(O) + "mixed_" + str(file_num))
 

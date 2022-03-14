@@ -72,7 +72,7 @@ def render(points, ids, object_lines):
     return frames
 
 if __name__ == "__main__":
-    p, ids, lines = load_dataset("test_data.npz", K)
+    p, ids, lines = load_dataset("datasets/8mixed_4.npz", K)
 
     frames = render(p, ids, lines)
     frames2 = render(p, ids, None)
