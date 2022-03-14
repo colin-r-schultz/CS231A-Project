@@ -41,7 +41,7 @@ def split_and_merge(points, K):
                 new_segmentation[obj_pts] = num_objects
                 num_objects += 1
                 continue
-            pts, _, res = singlebody_sfm(points[:, obj_pts], K)
+            pts, _, res = singlebody_sfm(points[:, obj_pts], K, iters=1500)
             if is_one_object(pts, res):
                 new_segmentation[obj_pts] = num_objects
                 num_objects += 1

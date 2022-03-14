@@ -5,7 +5,7 @@ from synthetic import generate_synthetic_points
 import matplotlib.pyplot as plt
 from utils import *
 
-def singlebody_sfm(points,  K, iters=3000):
+def singlebody_sfm(points,  K, iters=3000, verbose=False):
     """Compute 3D structure over multiple frames
 
     M = number of frames
@@ -57,24 +57,13 @@ def singlebody_sfm(points,  K, iters=3000):
     var = [X, angle, T]
     opt = tf.keras.optimizers.Adam(0.01)
 
-    # features = get_features()
-    # print("features!", features.shape)
-    # np.save("features2objs0iters", features)
-
     for i in range(iters):
-        if i % 1000 == 0:
+        if verbose and i % 1000 == 0:
             l = loss()
             print(i, l.numpy())
         opt.minimize(loss, var)
 
-
-    # features = get_features()
-    # print("features!", features.shape)
-    # np.save("features2objs10000iters", features)
-
     res = residuals().numpy()
-    # print("loss")
-    # print(np.mean(np.linalg.norm(res, axis=-1), axis=0))
 
     return X.numpy(), project().numpy(), res
 

@@ -7,7 +7,7 @@ from sklearn.metrics import v_measure_score
 import matplotlib.pyplot as plt
 from utils import *
 
-def multibody_sfm(points, K, O, iters=3000, init_p=None):
+def multibody_sfm(points, K, O, iters=3000, verbose=False):
     """Compute 3D structure over multiple frames
 
     M = number of frames
@@ -26,8 +26,7 @@ def multibody_sfm(points, K, O, iters=3000, init_p=None):
     """
     M, N, _ = points.shape
     X = tf.Variable(np.random.randn(N, 3) * 0.1, dtype=tf.float64)
-    if init_p is None:
-        init_p = np.random.randn(N, O) * 0.01
+    init_p = np.random.randn(N, O) * 0.01
     P = tf.Variable(init_p, dtype=tf.float64)
     quat = tf.Variable(np.tile([0, 0, 0, 1], (M, O, 1)), dtype=tf.float64)
     T = tf.Variable(np.tile([0, 0, 1], (M, O, 1)), dtype=tf.float64)
@@ -63,20 +62,11 @@ def multibody_sfm(points, K, O, iters=3000, init_p=None):
     var = [X, P, T, quat]
     opt = tf.keras.optimizers.Adam(0.01)
 
-    # features = get_features()
-    # print("features!", features.shape)
-    # np.save("features2objs0iters", features)
-
     for i in range(iters):
-        if i % 1000 == 0:
+        if verbose and i % 1000 == 0:
             l = loss()
             print(i, l.numpy())
         opt.minimize(loss, var)
-
-
-    # features = get_features()
-    # print("features!", features.shape)
-    # np.save("features2objs10000iters", features)
 
     res = residuals().numpy()
     P_ = tf.nn.softmax(P, axis=-1)
