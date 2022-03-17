@@ -1,8 +1,9 @@
 import numpy as np
+from sklearn.metrics import v_measure_score
 import tensorflow as tf
 import tensorflow_graphics.geometry.transformation as tfg_transformation
 
-def multibody_sfm(points, K, O, iters=3000, verbose=False):
+def multibody_sfm(points, K, O, iters=3000, verbose=False, init_p=None):
     """Compute 3D structure over multiple frames
 
     M = number of frames
@@ -21,8 +22,8 @@ def multibody_sfm(points, K, O, iters=3000, verbose=False):
     """
     M, N, _ = points.shape
     X = tf.Variable(np.random.randn(N, 3) * 0.1, dtype=tf.float64)
-    # init_p = np.random.randn(N, O) * 0.01
-    init_p = np.zeros((N, O))
+    if init_p is None:
+        init_p = np.random.randn(N, O) * 0.01
     P = tf.Variable(init_p, dtype=tf.float64)
     # quat = tf.Variable(np.tile([0, 0, 0, 1], (M, O, 1)), dtype=tf.float64)
     quat = tf.Variable(np.random.rand(M, O, 4), dtype=tf.float64)
@@ -78,7 +79,6 @@ def multibody_sfm(points, K, O, iters=3000, verbose=False):
 if __name__ == "__main__":
 
     from data import load_dataset
-    from synthetic import generate_synthetic_points
     import matplotlib.pyplot as plt
     from utils import *
     from collections import Counter
