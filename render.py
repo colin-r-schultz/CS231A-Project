@@ -90,15 +90,13 @@ if __name__ == "__main__":
     p, ids, lines = load_dataset(f"datasets/8mixed_{sys.argv[1]}.npz", K)
     shutil.rmtree("render", ignore_errors=True)
     os.mkdir("render")
-    os.mkdir("render/wf")
-    os.mkdir("render/kp")
     frames = render(p, ids, lines)
-    # write_gif("render/wf/wf{:04}.png", frames[:30 * 20])
     frames2 = render(p, ids, None)
-    # write_gif("render/kp/kp{:04}.png", frames2[:30 * 20])
     for i in range(N):
         im = Image.fromarray(cv2.cvtColor(frames2[i * 20], cv2.COLOR_BGR2RGB))
         im.save(f"render/kp{i}.png")
+        im = Image.fromarray(cv2.cvtColor(frames[i * 20], cv2.COLOR_BGR2RGB))
+        im.save(f"render/wf{i}.png")
     for i in range(frames.shape[0]):
         cv2.imshow("wireframe", frames[i])
         cv2.imshow("keypoints", frames2[i])

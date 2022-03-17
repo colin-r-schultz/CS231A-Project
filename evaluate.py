@@ -8,13 +8,11 @@ from continuous_sfm import multibody_sfm
 
 from data import load_dataset
 from grad_features import sfm_features
-from split_and_merge import split_and_merge
-from optical_flow_grouping import optical_flow_features
 from sfm import singlebody_sfm
 
 DATA_DIR = Path("datasets")
 
-M = 64
+M = 128
 
 K = np.array([
     [320, 0, 320],
@@ -59,7 +57,7 @@ def make_spatial_segmentation_method(O):
     return method
 
 
-def evaluate(method, n_obj=None, suffix=None):
+def evaluate(method, n_obj=None, suffix=None, m=M):
     """Evaluate a segmentation method
 
     Args:
@@ -73,8 +71,9 @@ def evaluate(method, n_obj=None, suffix=None):
     if suffix is not None:
         files = filter(lambda f: f.endswith(suffix + ".npz"), files)
     scores = []
+    print("m=", m)
     for fname in files:
-        points, labels = load_dataset(DATA_DIR / fname, K, M)
+        points, labels = load_dataset(DATA_DIR / fname, K, m)
         segmentation = method(points, K)
         score = v_measure_score(labels, segmentation)
         scores.append(score)
@@ -85,9 +84,9 @@ def evaluate(method, n_obj=None, suffix=None):
 if __name__ == "__main__":
     O = 8
     all_scores = []
-    for o in range(2, O+1):
+    for m in [2, 4, 8, 16, 32, 64, 128]:
         method = make_spatial_segmentation_method(O)
-        scores = evaluate(method, O)
+        scores = evaluate(method, O, m=m)
         print("####################################")
         print(scores)
         print("median", np.median(scores))

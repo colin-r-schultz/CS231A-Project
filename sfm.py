@@ -49,7 +49,7 @@ def singlebody_sfm(points,  K, iters=3000, verbose=False):
     @tf.function
     def loss():
         res = residuals()
-        res_loss = tf.reduce_mean(tf.norm(res, axis=-1))
+        res_loss = tf.reduce_mean(tf.reduce_sum(tf.square(res), axis=-1))
         centroid_loss = tf.reduce_sum(tf.square(tf.reduce_mean(X, axis=0)))
         loss = res_loss + 0.01 * centroid_loss
         return loss

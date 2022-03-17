@@ -30,8 +30,8 @@ def load_dataset(fname, K, num_frames=None):
     data = np.load(fname)
     points = data["points"]
     ids = data["ids"]
-    Rs = data["Rs"][:num_frames]
-    Ts = data["Ts"][:num_frames]
+    Rs = data["Rs"][:, :num_frames]
+    Ts = data["Ts"][:, :num_frames]
 
     objs = []
 
