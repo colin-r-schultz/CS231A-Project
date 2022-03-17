@@ -9,6 +9,8 @@ from continuous_sfm import multibody_sfm
 from data import load_dataset
 from grad_features import sfm_features
 from split_and_merge import split_and_merge
+from optical_flow_grouping import optical_flow_features
+from sfm import singlebody_sfm
 
 DATA_DIR = Path("datasets")
 
@@ -40,6 +42,23 @@ def make_features_method(O):
         return seg
     return method
 
+def make_optical_flow_method(O):
+    def method(points, K):
+        features = optical_flow_features(points, K)
+        km = KMeans(O)
+        seg = km.fit_predict(features)
+        return seg
+    return method
+
+def make_spatial_segmentation_method(O):
+    def method(points, K):
+        pts, _, _ = singlebody_sfm(points, K)
+        km = KMeans(O)
+        seg = km.fit_predict(pts)
+        return seg
+    return method
+
+
 def evaluate(method, n_obj=None, suffix=None):
     """Evaluate a segmentation method
 
@@ -64,19 +83,15 @@ def evaluate(method, n_obj=None, suffix=None):
 
 
 if __name__ == "__main__":
-    O = 6
-    def method(points, K):
-        _, _, prob = multibody_sfm(points, K, O, iters=1500)
-        seg = np.argmax(prob, axis=-1)
-        return seg
-
-    methods = [
-        make_random_method(O),
-        make_continuous_method(O),
-        make_features_method(O),
-    ]
-    for m in methods:
-        scores = evaluate(m, 6)
+    O = 8
+    all_scores = []
+    for o in range(2, O+1):
+        method = make_spatial_segmentation_method(O)
+        scores = evaluate(method, O)
         print("####################################")
         print(scores)
         print("median", np.median(scores))
+        all_scores.append(scores)
+    
+    s = np.array(all_scores)
+    np.savetxt("spatial_segmentation_results.txt", s, delimiter=',')

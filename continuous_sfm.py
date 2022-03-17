@@ -21,9 +21,11 @@ def multibody_sfm(points, K, O, iters=3000, verbose=False):
     """
     M, N, _ = points.shape
     X = tf.Variable(np.random.randn(N, 3) * 0.1, dtype=tf.float64)
-    init_p = np.random.randn(N, O) * 0.01
+    # init_p = np.random.randn(N, O) * 0.01
+    init_p = np.zeros((N, O))
     P = tf.Variable(init_p, dtype=tf.float64)
-    quat = tf.Variable(np.tile([0, 0, 0, 1], (M, O, 1)), dtype=tf.float64)
+    # quat = tf.Variable(np.tile([0, 0, 0, 1], (M, O, 1)), dtype=tf.float64)
+    quat = tf.Variable(np.random.rand(M, O, 4), dtype=tf.float64)
     T = tf.Variable(np.tile([0, 0, 1], (M, O, 1)), dtype=tf.float64)
 
     K = tf.constant(K, dtype=tf.float64)
@@ -48,19 +50,22 @@ def multibody_sfm(points, K, O, iters=3000, verbose=False):
         res = residuals()
 
         P_ = tf.reshape(tf.nn.softmax(P, axis=-1), (1, N, O))
+        #res_loss = tf.reduce_mean(tf.reduce_sum(P_ * tf.reduce_sum(tf.square(res), axis=-1), axis=-1))
         res_loss = tf.reduce_mean(tf.reduce_sum(P_ * tf.norm(res, axis=-1), axis=-1))
         
         centroid_loss = tf.reduce_sum(tf.square(tf.reduce_mean(X, axis=0)))
         loss = res_loss + 0.01 * centroid_loss
         return loss
 
-    var = [X, P, T, quat]
+    var = [X, T, quat]
     opt = tf.keras.optimizers.Adam(0.01)
 
     for i in range(iters):
-        if verbose and i % 1000 == 0:
+        if verbose and i % 100 == 0:
             l = loss()
             print(i, l.numpy())
+        if i == 100:
+            var.append(P)
         opt.minimize(loss, var)
 
     res = residuals().numpy()
@@ -77,17 +82,18 @@ if __name__ == "__main__":
     import matplotlib.pyplot as plt
     from utils import *
     from collections import Counter
+    from sklearn.metrics import v_measure_score
 
     K = np.array([
         [320, 0, 320],
         [0, 320, 240],
         [0, 0, 1]
     ])
-    M = 128
-    p, ids = load_dataset("datasets/2tetras_cubes_mixed.npz", K, num_frames=M)
+    M = 64
+    p, ids = load_dataset("datasets/3mixed_4.npz", K, num_frames=M)
     O = np.max(ids) + 1
 
-    pts2, p2, prob = multibody_sfm(p, K, O, iters=10000)
+    pts2, p2, prob = multibody_sfm(p, K, O, iters=3000, verbose=True)
     print(np.round(prob, 2))
 
     classes = np.argmax(prob, axis=-1)
