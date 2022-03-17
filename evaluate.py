@@ -85,7 +85,7 @@ if __name__ == "__main__":
     O = 8
     all_scores = []
     for m in [2, 4, 8, 16, 32, 64, 128]:
-        method = make_spatial_segmentation_method(O)
+        method = make_random_method(O)
         scores = evaluate(method, O, m=m)
         print("####################################")
         print(scores)
@@ -93,4 +93,4 @@ if __name__ == "__main__":
         all_scores.append(scores)
     
     s = np.array(all_scores)
-    np.savetxt("spatial_segmentation_results.txt", s, delimiter=',')
+    np.savetxt("results_m/random.txt", s, delimiter=',')

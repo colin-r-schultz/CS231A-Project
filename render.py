@@ -18,6 +18,7 @@ K = np.array([
 ])
 
 COLORS = [(255, 0, 0), (0, 255, 0), (0, 0, 255), (255, 255, 0), (255, 0, 255)]
+COLORS = [(175, 118, 57), (54, 133, 239), (62, 157, 81)]
 
 
 def get_color(i):
@@ -87,7 +88,7 @@ if __name__ == "__main__":
     import shutil
     N = 8
 
-    p, ids, lines = load_dataset(f"datasets/8mixed_{sys.argv[1]}.npz", K)
+    p, ids, lines = load_dataset(f"datasets/2mixed_0.npz", K)
     shutil.rmtree("render", ignore_errors=True)
     os.mkdir("render")
     frames = render(p, ids, lines)

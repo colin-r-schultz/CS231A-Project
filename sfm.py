@@ -1,6 +1,7 @@
 import numpy as np
 import tensorflow as tf
 import tensorflow_graphics.geometry.transformation as tfg_transformation
+from data import load_dataset
 from synthetic import generate_synthetic_points
 import matplotlib.pyplot as plt
 from utils import *
@@ -69,49 +70,30 @@ def singlebody_sfm(points,  K, iters=3000, verbose=False):
     return X.numpy(), project().numpy(), res
 
 if __name__ == "__main__":
+
+
     M = 64
     K = np.array([
         [320, 0, 320],
         [0, 320, 240],
         [0, 0, 1]
     ])
-    pts, p = generate_synthetic_points(K, M)
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-    ax.scatter(pts[0, :, 0], pts[0, :, 1], pts[0, :, 2])
-    ax.set_box_aspect([1,1,1])
-    set_axes_equal(ax)
-    plt.show()
+    p, ids = load_dataset("datasets/2mixed_0.npz", K)
 
-    pts2, p2, res = singlebody_sfm(p, K, iters=10000)
+    pts2, p2, res = singlebody_sfm(p, K, iters=3000)
     print(pts2)
 
-    print("loss")
-    pt_loss = np.mean(np.linalg.norm(res, axis=-1), axis=0)
-    print(pt_loss[:8])
-    print(np.mean(pt_loss[:8]))
-    print(pt_loss[8:32])
-    print(np.mean(pt_loss[8:32]))
-    print(pt_loss[32:46])
-    print(np.mean(pt_loss[32:46]))
-
-    objs_gt = np.zeros(p.shape[1], int)
-    objs_gt[8:32] = 1
-    objs_gt[32:] = 2
-
-    plt.scatter(objs_gt, pt_loss)
-    plt.show()
-
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-    ax.scatter(pts2[:, 0], pts2[:, 1], pts2[:, 2])
-    ax.set_box_aspect([1,1,1])
-    set_axes_equal(ax)
-    plt.show()
+    # fig = plt.figure()
+    # ax = fig.add_subplot(111, projection='3d')
+    # for i in range(3):
+    #     ax.scatter(pts2[ids==i, 0], pts2[ids==i, 1], pts2[ids==i, 2])
+    # ax.set_box_aspect([1,1,1])
+    # set_axes_equal(ax)
+    # plt.show()
 
 
     
-    for i in range(M):
+    for i in range(4):
         plt.axis("equal")
         plt.xlim([0, 640])
         plt.ylim([0, 480])
