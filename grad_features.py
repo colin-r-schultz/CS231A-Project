@@ -42,7 +42,7 @@ def sfm_features(points, K):
         # l = tf.reduce_mean(tf.sqrt(tf.reduce_sum(tf.square(res), axis=-1)))
         return l
 
-    @tf.function
+    # not tf.function because we only call this once
     def get_features():
         with tf.GradientTape(persistent=True) as g:
             angles = tf.tile(tf.reshape(angle, (M, 1, 3)), (1, N, 1))

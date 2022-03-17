@@ -1,6 +1,7 @@
 import numpy as np
 
 from synthetic import get_random_transforms, project_points, transform_shape, make_cube, make_cylinder, make_tetra
+from utils import set_axes_equal
 
 
 def save_dataset(objs, M, fname):
@@ -45,15 +46,16 @@ def load_dataset(fname, K, num_frames=None):
     return pixels, ids
 
 if __name__ == "__main__":
-    M = 64
-    objs = [
-        # make_cube(),
-        # make_cube(0.5),
-        # make_cube(1.5),
-        make_cylinder(1, 2, 6),
-        make_cylinder(1.5, 1, 7),
-        # make_tetra(0.7),
-        # make_tetra(),
-        # make_tetra(1.5),
-    ]
-    save_dataset(objs, M, "2cylinders_64frames")
+    import matplotlib.pyplot as plt
+    data = np.load("datasets/8mixed_8.npz")
+    points = data["points"]
+    ids = data["ids"]
+
+    for i in range(np.max(ids) + 1):
+        pts = points[ids==i]
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+        ax.scatter(pts[:, 0], pts[:, 1], pts[:, 2])
+        ax.set_box_aspect([1,1,1])
+        set_axes_equal(ax)
+        plt.show()
