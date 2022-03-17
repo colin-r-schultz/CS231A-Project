@@ -64,19 +64,20 @@ def evaluate(method, n_obj=None, suffix=None):
 
 
 if __name__ == "__main__":
-    O = 6
-    def method(points, K):
-        _, _, prob = multibody_sfm(points, K, O, iters=1500)
-        seg = np.argmax(prob, axis=-1)
-        return seg
-
+    O = 8
     methods = [
         make_random_method(O),
         make_continuous_method(O),
         make_features_method(O),
     ]
-    for m in methods:
-        scores = evaluate(m, 6)
+    all_scores = []
+    for o in range(2, O + 1):
+        method = make_random_method(o)
+        scores = evaluate(method, o)
         print("####################################")
         print(scores)
         print("median", np.median(scores))
+        all_scores.append(scores)
+    
+    s = np.array(all_scores)
+    np.savetxt("random_results.txt", s, delimiter=',')

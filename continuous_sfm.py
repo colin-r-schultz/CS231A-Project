@@ -1,8 +1,9 @@
 import numpy as np
+from sklearn.metrics import v_measure_score
 import tensorflow as tf
 import tensorflow_graphics.geometry.transformation as tfg_transformation
 
-def multibody_sfm(points, K, O, iters=3000, verbose=False):
+def multibody_sfm(points, K, O, iters=3000, verbose=False, init_p=None):
     """Compute 3D structure over multiple frames
 
     M = number of frames
@@ -21,7 +22,8 @@ def multibody_sfm(points, K, O, iters=3000, verbose=False):
     """
     M, N, _ = points.shape
     X = tf.Variable(np.random.randn(N, 3) * 0.1, dtype=tf.float64)
-    init_p = np.random.randn(N, O) * 0.01
+    if init_p is None:
+        init_p = np.random.randn(N, O) * 0.01
     P = tf.Variable(init_p, dtype=tf.float64)
     quat = tf.Variable(np.tile([0, 0, 0, 1], (M, O, 1)), dtype=tf.float64)
     T = tf.Variable(np.tile([0, 0, 1], (M, O, 1)), dtype=tf.float64)
@@ -73,7 +75,6 @@ def multibody_sfm(points, K, O, iters=3000, verbose=False):
 if __name__ == "__main__":
 
     from data import load_dataset
-    from synthetic import generate_synthetic_points
     import matplotlib.pyplot as plt
     from utils import *
     from collections import Counter
@@ -84,10 +85,12 @@ if __name__ == "__main__":
         [0, 0, 1]
     ])
     M = 128
-    p, ids = load_dataset("datasets/2tetras_cubes_mixed.npz", K, num_frames=M)
+    p, ids = load_dataset("datasets/8mixed_8.npz", K, num_frames=M)
     O = np.max(ids) + 1
 
-    pts2, p2, prob = multibody_sfm(p, K, O, iters=10000)
+    init_p = np.zeros((p.shape[1], O))
+    init_p[(range(p.shape[1]), ids)] = 1
+    pts2, p2, prob = multibody_sfm(p, K, O, iters=1500, init_p=init_p)
     print(np.round(prob, 2))
 
     classes = np.argmax(prob, axis=-1)
