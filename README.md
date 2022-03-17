@@ -1,4 +1,5 @@
-# CS231A-Project
+# Object Segmentation via Multibody Structure from Motion
+By Aaron and Colin Schultz
 
 To see our implementations of the optimization problems presented in our report, see the following functions:
 
